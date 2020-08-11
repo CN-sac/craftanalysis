@@ -6,6 +6,7 @@
 
 using namespace std;
 
+//Function Add Subkey and SubCells
 vector<vector<int>> subByte(vector<vector<int>> in , vector<vector<int>> rk )
 {
     vector<int> sbox = {0xc, 0x0, 0xf, 0xa,
@@ -36,9 +37,7 @@ vector<vector<int>> subByte(vector<vector<int>> in , vector<vector<int>> rk )
     return out;
 }
 
-
-
-//linear layer
+//linear layer nibble rotation
 vector<vector<int>> shiftNible(vector<vector<int>> in )
 {
     int h[4] = {3, 0, 1, 2};
@@ -53,7 +52,7 @@ vector<vector<int>> shiftNible(vector<vector<int>> in )
     return out;
 }
 
-//key update
+//key update algorithm
 vector<vector<int>> keySchedule(vector<vector<int>> in )
 {
     vector<int> sbox = {0xc, 0x0, 0xf, 0xa,
@@ -85,10 +84,7 @@ vector<vector<int>> keySchedule(vector<vector<int>> in )
     return out;
 }
 
-
-
-// Test d i s t i n g u i s h e r f o r twe ak able BC with one tweakey l i n e
-
+// Test the correctness of integral distinguisher
 int testTK1(void)
 {
     //generate all keys at random
@@ -111,33 +107,30 @@ int testTK1(void)
         }
     }
 
-
-    int x_Rounds = 3;
-    int y_Rounds = 5;
+    int x_Rounds = 4;
+    int y_Rounds = 4;
     int Round = x_Rounds+y_Rounds;
     printf("  Number of rounds : %d\n" , Round);
 
+    //Linear approximation counter
     vector<int> counter(16 , 0);
 
     for ( int i1 = 0; i1 < 16; i1++)
     {
         for ( int i2 = 0; i2 < 16; i2++)
-        {            
+        {
             for ( int i3 = 0; i3 < 16; i3++)
             {
-                /*
                 for ( int i4 = 0; i4 < 16; i4++)
                 {
-                */               
-
                     vector<vector<int>> in = text;
                     vector<vector<int>> tk1 = key1;
+                    //Traverse the position where the mask is zero in the distinguisher, including the key
+                    in[0][0] = i1;
+                    in[0][1] = i2;
+                    in[1][1] = i3;
 
-                    in[0][1] = i1;
-                    //in[0][1] = i2;
-                    in[1][0] = i2;
-
-                    tk1[1][1] = i3;
+                    tk1[0][1] = i4;
 
                     //encryption
                     for (int r = 0; r < (Round - 1) ; r++)
@@ -146,16 +139,16 @@ int testTK1(void)
                         in = shiftNible(in);
 
                         tk1 = keySchedule(tk1);
-
                     }
                     in = subByte (in , tk1);
+                    in = shiftNible(in);
 
-                    counter[in[0][0]]++;
-                /*
-                } 
-                */               
+                    counter[in[1][1]]++;
+
+                }
+
             }
-            
+
         }
     }
 
